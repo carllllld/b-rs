@@ -37,7 +37,7 @@ export default function WarRoom({ sessionId, onClose }: WarRoomProps) {
           table: 'agent_logs',
           filter: `cv_version_id=eq.${sessionId}`,
         },
-        (payload) => {
+        (payload: any) => {
           setLogs((prev) => [...prev, payload.new as AgentLog]);
         }
       )
