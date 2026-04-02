@@ -9,10 +9,15 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        'dark-bg': '#0a0e1a',
-        'dark-card': '#151b2e',
-        'accent-green': '#00ff88',
-        'accent-blue': '#0066ff',
+        'cyber-dark': '#0a0e1a',
+        'cyber-darker': '#050810',
+        'cyber-blue': '#00d9ff',
+        'cyber-green': '#00ff88',
+        'cyber-red': '#ff0055',
+        'cyber-purple': '#a855f7',
+      },
+      fontFamily: {
+        'mono': ['JetBrains Mono', 'monospace'],
       },
     },
   },

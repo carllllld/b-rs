@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { JetBrains_Mono } from "next/font/google";
 import "./globals.css";
-import { AuthProvider } from "@/components/AuthProvider";
 
-const inter = Inter({ subsets: ["latin"] });
+const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "MATCHKVÄLL - Hitta din sportbar",
-  description: "Hitta bästa sportbaren i Stockholm för att se fotbollsmatcher live",
+  title: "APPLICANT-OS | Autonomous Job Application System",
+  description: "Multi-agent AI system for optimizing and automating job applications",
 };
 
 export default function RootLayout({
@@ -16,10 +15,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="sv">
-      <body className={inter.className}>
-        <AuthProvider>{children}</AuthProvider>
-      </body>
+    <html lang="en">
+      <body className={jetbrainsMono.className}>{children}</body>
     </html>
   );
 }
