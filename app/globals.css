@@ -1,0 +1,10 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-dark-bg text-white;
+}
+
+/* Mapbox styles */
+@import 'mapbox-gl/dist/mapbox-gl.css';
