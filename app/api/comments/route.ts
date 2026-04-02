@@ -14,18 +14,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
-    const { barId, barName, showingMatch, matchName, withSound, crowdLevel, beerPrice } = body;
+    const { barId, text } = await request.json();
 
-    const report = await prisma.report.create({
+    if (!text || text.trim().length === 0) {
+      return NextResponse.json(
+        { error: 'Kommentar kan inte vara tom' },
+        { status: 400 }
+      );
+    }
+
+    const comment = await prisma.comment.create({
       data: {
         barId,
-        barName,
-        showingMatch,
-        matchName,
-        withSound,
-        crowdLevel,
-        beerPrice,
+        text: text.trim(),
         userId: session.user.id,
       },
       include: {
@@ -37,14 +38,11 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({
-      success: true,
-      report,
-    });
+    return NextResponse.json(comment);
   } catch (error) {
-    console.error('Error processing live report:', error);
+    console.error('Error creating comment:', error);
     return NextResponse.json(
-      { error: 'Kunde inte spara rapport' },
+      { error: 'Kunde inte spara kommentar' },
       { status: 500 }
     );
   }
@@ -62,7 +60,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const reports = await prisma.report.findMany({
+    const comments = await prisma.comment.findMany({
       where: { barId },
       include: {
         user: {
@@ -74,14 +72,13 @@ export async function GET(request: NextRequest) {
       orderBy: {
         createdAt: 'desc',
       },
-      take: 10,
     });
 
-    return NextResponse.json(reports);
+    return NextResponse.json(comments);
   } catch (error) {
-    console.error('Error fetching reports:', error);
+    console.error('Error fetching comments:', error);
     return NextResponse.json(
-      { error: 'Kunde inte hämta rapporter' },
+      { error: 'Kunde inte hämta kommentarer' },
       { status: 500 }
     );
   }
