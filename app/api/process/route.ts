@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { BlackboardOrchestrator } from '@/lib/blackboard/orchestrator';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,6 +13,9 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Lazy load to avoid build-time issues
+    const { BlackboardOrchestrator } = await import('@/lib/blackboard/orchestrator');
 
     // For demo purposes, using a mock user ID
     // In production, get this from authentication

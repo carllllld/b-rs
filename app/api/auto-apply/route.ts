@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { BlackboardOrchestrator } from '@/lib/blackboard/orchestrator';
-import { supabase } from '@/lib/supabase/client';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,6 +13,10 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Lazy load to avoid build-time issues
+    const { supabase } = await import('@/lib/supabase/client');
+    const { BlackboardOrchestrator } = await import('@/lib/blackboard/orchestrator');
 
     // Fetch CV data
     const { data: cvVersion } = await supabase

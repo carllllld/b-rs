@@ -1,11 +1,16 @@
-import { chromium, Browser, Page } from 'playwright';
 import { ChatOpenAI } from '@langchain/openai';
 
 export class GhostBrowserAgent {
-  private browser: Browser | null = null;
-  private model: ChatOpenAI;
+  private browser: any = null;
+  private model: any;
 
   constructor() {
+    // Lazy load OpenAI to avoid build issues
+    this.initModel();
+  }
+
+  async initModel() {
+    const { ChatOpenAI } = await import('@langchain/openai');
     this.model = new ChatOpenAI({
       modelName: 'gpt-4-turbo-preview',
       temperature: 0.7,
@@ -14,13 +19,14 @@ export class GhostBrowserAgent {
   }
 
   async initialize() {
+    const { chromium } = await import('playwright');
     this.browser = await chromium.launch({
       headless: false, // Set to true in production
       slowMo: 100,
     });
   }
 
-  async detectFormFields(page: Page) {
+  async detectFormFields(page: any) {
     // Extract all form fields
     const fields = await page.evaluate(() => {
       const inputs = Array.from(document.querySelectorAll('input, textarea, select'));
@@ -82,7 +88,7 @@ Respond in JSON:
     return JSON.parse(jsonMatch[0]);
   }
 
-  async fillForm(page: Page, mappings: any[]) {
+  async fillForm(page: any, mappings: any[]) {
     for (const mapping of mappings) {
       try {
         const element = await page.locator(mapping.selector).first();
@@ -97,7 +103,7 @@ Respond in JSON:
     }
   }
 
-  async handleTrickyQuestions(page: Page, trickyQuestions: any[], cvData: any) {
+  async handleTrickyQuestions(page: any, trickyQuestions: any[], cvData: any) {
     for (const question of trickyQuestions) {
       try {
         const element = await page.locator(question.selector).first();
