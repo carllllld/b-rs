@@ -67,12 +67,35 @@ const mockBars: Bar[] = [
 
 export async function GET() {
   try {
-    // Här skulle du integrera med Google Places API
-    // const apiKey = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY;
-    // const response = await fetch(
-    //   `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=59.3293,18.0686&radius=5000&type=bar&keyword=sports&key=${apiKey}`
-    // );
+    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY;
     
+    // Om API-nyckel finns och inte är placeholder, använd live-data
+    if (apiKey && apiKey !== 'your_google_api_key_here') {
+      try {
+        const response = await fetch(
+          `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=59.3293,18.0686&radius=5000&type=bar&keyword=sports&key=${apiKey}`
+        );
+        
+        if (response.ok) {
+          const data = await response.json();
+          const liveBars: Bar[] = data.results.map((place: any) => ({
+            id: place.place_id,
+            name: place.name,
+            address: place.vicinity,
+            latitude: place.geometry.location.lat,
+            longitude: place.geometry.location.lng,
+            rating: place.rating,
+            priceLevel: place.price_level,
+            placeId: place.place_id,
+          }));
+          return NextResponse.json(liveBars);
+        }
+      } catch (apiError) {
+        console.error('Google Places API error, falling back to mock data:', apiError);
+      }
+    }
+    
+    // Fallback till mock-data
     return NextResponse.json(mockBars);
   } catch (error) {
     console.error('Error fetching bars:', error);
