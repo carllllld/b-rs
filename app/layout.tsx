@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
-import { JetBrains_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
+import { Toaster } from 'react-hot-toast';
 
-const jetbrainsMono = JetBrains_Mono({ subsets: ["latin"] });
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "APPLICANT-OS | Autonomous Job Application System",
-  description: "Multi-agent AI system for optimizing and automating job applications",
+  title: "APPLICANT-OS | AI-Powered Job Applications",
+  description: "Land your dream job with AI-optimized CVs and auto-apply technology",
 };
 
 export default function RootLayout({
@@ -16,7 +17,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={jetbrainsMono.className}>{children}</body>
+      <body className={inter.className}>
+        {children}
+        <Toaster position="top-right" />
+      </body>
     </html>
   );
 }

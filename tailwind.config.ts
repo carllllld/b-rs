@@ -9,15 +9,18 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        'cyber-dark': '#0a0e1a',
-        'cyber-darker': '#050810',
-        'cyber-blue': '#00d9ff',
-        'cyber-green': '#00ff88',
-        'cyber-red': '#ff0055',
-        'cyber-purple': '#a855f7',
-      },
-      fontFamily: {
-        'mono': ['JetBrains Mono', 'monospace'],
+        primary: {
+          50: '#eff6ff',
+          100: '#dbeafe',
+          200: '#bfdbfe',
+          300: '#93c5fd',
+          400: '#60a5fa',
+          500: '#3b82f6',
+          600: '#2563eb',
+          700: '#1d4ed8',
+          800: '#1e40af',
+          900: '#1e3a8a',
+        },
       },
     },
   },

@@ -2,6 +2,7 @@ import { InfiltratorAgent } from '../agents/infiltrator';
 import { ArchitectAgent } from '../agents/architect';
 import { AuditorAgent } from '../agents/auditor';
 import { GhostBrowserAgent } from '../agents/ghost-browser';
+import { PDFGenerator } from '../agents/pdf-generator';
 import { supabase } from '../supabase/client';
 
 export class BlackboardOrchestrator {
@@ -9,12 +10,14 @@ export class BlackboardOrchestrator {
   private architect: ArchitectAgent;
   private auditor: AuditorAgent;
   private ghostBrowser: GhostBrowserAgent;
+  private pdfGenerator: PDFGenerator;
 
   constructor() {
     this.infiltrator = new InfiltratorAgent();
     this.architect = new ArchitectAgent();
     this.auditor = new AuditorAgent();
     this.ghostBrowser = new GhostBrowserAgent();
+    this.pdfGenerator = new PDFGenerator();
   }
 
   async processApplication(
@@ -29,7 +32,10 @@ export class BlackboardOrchestrator {
       .from('cv_versions')
       .insert({
         user_id: userId,
+        original_cv_text: cvContent,
         job_description: jobDescription,
+        job_url: jobUrl,
+        company_context: companyContext,
         status: 'processing',
         version_number: 1,
       })
@@ -44,7 +50,7 @@ export class BlackboardOrchestrator {
 
     try {
       // PHASE 1: INFILTRATOR analyzes the job
-      await this.logPhase(cvVersionId, 'PHASE_1', 'INFILTRATOR analyzing target...');
+      await this.logPhase(cvVersionId, 'PHASE_1', 'INFILTRATOR analyzing target job description...');
       
       const targetAnalysis = await this.infiltrator.analyze(
         jobDescription,
@@ -54,12 +60,18 @@ export class BlackboardOrchestrator {
       await this.infiltrator.logAction(
         cvVersionId,
         'ANALYSIS_COMPLETE',
-        `Identified ${targetAnalysis.atsKeywords.length} ATS keywords`,
+        `Identified ${targetAnalysis.atsKeywords.length} critical ATS keywords and ${targetAnalysis.killerQuestions.length} potential rejection triggers`,
         targetAnalysis
       );
 
+      // Save infiltrator analysis
+      await supabase
+        .from('cv_versions')
+        .update({ infiltrator_analysis: targetAnalysis })
+        .eq('id', cvVersionId);
+
       // PHASE 2: ARCHITECT + AUDITOR iterative optimization
-      await this.logPhase(cvVersionId, 'PHASE_2', 'ARCHITECT + AUDITOR optimization loop...');
+      await this.logPhase(cvVersionId, 'PHASE_2', 'ARCHITECT + AUDITOR optimization loop starting...');
 
       const { optimizedCV, auditResult, iterations } = await this.auditor.iterativeOptimization(
         cvContent,
@@ -68,25 +80,34 @@ export class BlackboardOrchestrator {
         cvVersionId
       );
 
-      // Update CV version with results
+      // Save architect and auditor results
       await supabase
         .from('cv_versions')
         .update({
+          optimized_cv_data: optimizedCV,
+          auditor_report: auditResult,
           ats_score: auditResult.atsScore,
+          iterations_count: iterations,
           status: auditResult.status === 'VERIFIED_ACCESS' ? 'verified' : 'needs_review',
         })
         .eq('id', cvVersionId);
 
-      // PHASE 3: Generate PDF (placeholder - implement with pdf-lib)
+      // PHASE 3: Generate ATS-optimized PDF
       await this.logPhase(cvVersionId, 'PHASE_3', 'Generating ATS-optimized PDF...');
       
-      // TODO: Implement PDF generation
-      const pdfUrl = await this.generatePDF(optimizedCV, cvVersionId);
+      const pdfBytes = await this.pdfGenerator.generateOptimizedCV(optimizedCV);
+      const pdfUrl = await this.pdfGenerator.uploadToSupabase(pdfBytes, userId, cvVersionId);
 
       await supabase
         .from('cv_versions')
         .update({ optimized_cv_url: pdfUrl })
         .eq('id', cvVersionId);
+
+      await this.logPhase(
+        cvVersionId,
+        'COMPLETE',
+        `✓ Optimization complete! ATS Score: ${auditResult.atsScore}% after ${iterations} iterations`
+      );
 
       return {
         cvVersionId,
@@ -102,18 +123,31 @@ export class BlackboardOrchestrator {
         .update({ status: 'failed' })
         .eq('id', cvVersionId);
 
+      await this.logPhase(cvVersionId, 'ERROR', `Failed: ${error}`);
       throw error;
     }
   }
 
   async autoApply(cvVersionId: string, jobUrl: string, cvData: any) {
     // Create application record
+    const { data: cvVersion } = await supabase
+      .from('cv_versions')
+      .select('user_id')
+      .eq('id', cvVersionId)
+      .single();
+
+    if (!cvVersion) {
+      throw new Error('CV version not found');
+    }
+
     const { data: application } = await supabase
       .from('job_applications')
       .insert({
+        user_id: cvVersion.user_id,
         cv_version_id: cvVersionId,
         job_url: jobUrl,
         status: 'applying',
+        auto_applied: true,
       })
       .select()
       .single();
@@ -123,7 +157,7 @@ export class BlackboardOrchestrator {
     }
 
     try {
-      await this.logPhase(application.id, 'AUTO_APPLY', 'GHOST_BROWSER initiating...');
+      await this.logPhase(application.id, 'AUTO_APPLY', 'GHOST_BROWSER initiating form detection...');
 
       const result = await this.ghostBrowser.navigateAndApply(
         jobUrl,
@@ -136,6 +170,7 @@ export class BlackboardOrchestrator {
         .update({
           status: 'submitted',
           applied_at: new Date().toISOString(),
+          application_data: result,
         })
         .eq('id', application.id);
 
@@ -150,23 +185,13 @@ export class BlackboardOrchestrator {
     }
   }
 
-  private async generatePDF(cvData: any, cvVersionId: string): Promise<string> {
-    // Placeholder - implement with pdf-lib
-    // Should create ATS-friendly PDF:
-    // - Standard fonts (Arial, Times New Roman)
-    // - No columns
-    // - Machine-readable text
-    // - Proper metadata
-    
-    return `https://placeholder-pdf-url/${cvVersionId}.pdf`;
-  }
-
   private async logPhase(cvVersionId: string, phase: string, message: string) {
     await supabase.from('agent_logs').insert({
       cv_version_id: cvVersionId,
       agent_name: 'ORCHESTRATOR',
       action: phase,
       message,
+      log_level: phase === 'ERROR' ? 'error' : phase === 'COMPLETE' ? 'success' : 'info',
       metadata: { timestamp: new Date().toISOString() },
     });
   }

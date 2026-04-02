@@ -62,7 +62,6 @@ export class InfiltratorAgent {
       const response = await this.model.invoke(formattedPrompt);
       const content = response.content as string;
       
-      // Extract JSON from response
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
         throw new Error('Failed to extract JSON from response');
@@ -76,7 +75,6 @@ export class InfiltratorAgent {
   }
 
   async logAction(cvVersionId: string, action: string, message: string, metadata: any) {
-    // Log to Supabase
     const { supabase } = await import('@/lib/supabase/client');
     await supabase.from('agent_logs').insert({
       cv_version_id: cvVersionId,
