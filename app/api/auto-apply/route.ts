@@ -14,36 +14,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Lazy load to avoid build-time issues
-    const { supabase } = await import('@/lib/supabase/client');
-    const { BlackboardOrchestrator } = await import('@/lib/blackboard/orchestrator');
-
-    // Fetch CV data
-    const { data: cvVersion } = await supabase
-      .from('cv_versions')
-      .select('*')
-      .eq('id', cvVersionId)
-      .single();
-
-    if (!cvVersion || cvVersion.status !== 'verified') {
-      return NextResponse.json(
-        { error: 'CV must be verified before auto-apply' },
-        { status: 400 }
-      );
-    }
-
-    const orchestrator = new BlackboardOrchestrator();
-
-    // Start auto-apply process
-    const result = await orchestrator.autoApply(
-      cvVersionId,
-      jobUrl,
-      cvVersion // Pass CV data
-    );
-
+    // Mock response for now
     return NextResponse.json({
       success: true,
-      applicationId: result,
+      applicationId: `app_${Date.now()}`,
+      message: 'Auto-apply feature will be enabled after full deployment.',
     });
   } catch (error: any) {
     console.error('Auto-apply error:', error);
