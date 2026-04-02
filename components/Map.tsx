@@ -64,17 +64,21 @@ export default function Map({ bars, selectedBar, onSelectBar }: MapProps) {
     bars.forEach(bar => {
       const el = document.createElement('div');
       el.className = 'marker';
-      el.style.width = '40px';
-      el.style.height = '40px';
       el.style.cursor = 'pointer';
+      
+      const isSelected = selectedBar?.id === bar.id;
+      const hasMatch = !!bar.currentMatch;
+      
       el.innerHTML = `
-        <div class="relative">
-          <div class="w-10 h-10 bg-accent-green rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform ${
-            selectedBar?.id === bar.id ? 'ring-4 ring-white' : ''
-          }">
-            <span class="text-2xl">🍺</span>
+        <div class="relative transition-transform hover:scale-110 ${isSelected ? 'scale-125' : ''}">
+          <div class="w-12 h-12 rounded-full flex items-center justify-center shadow-2xl ${
+            hasMatch 
+              ? 'bg-gradient-to-br from-green-400 to-blue-500' 
+              : 'bg-white/20 backdrop-blur-sm'
+          } ${isSelected ? 'ring-4 ring-white' : ''}">
+            <span class="text-2xl">${hasMatch ? '⚽' : '🍺'}</span>
           </div>
-          ${bar.currentMatch ? '<div class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>' : ''}
+          ${hasMatch ? '<div class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>' : ''}
         </div>
       `;
 
@@ -102,27 +106,28 @@ export default function Map({ bars, selectedBar, onSelectBar }: MapProps) {
 
   if (mapError) {
     return (
-      <div className="w-full h-full flex items-center justify-center bg-dark-bg">
+      <div className="w-full h-full flex items-center justify-center bg-[#0a0a0a]">
         <div className="text-center p-8 max-w-md">
           <div className="text-6xl mb-4">🗺️</div>
-          <h2 className="text-2xl font-bold mb-4 text-accent-green">Karta (Mock Mode)</h2>
-          <p className="text-gray-400 mb-4">
-            Kartan körs i mock-läge. Lägg till din Mapbox-token i .env.local för att se den riktiga kartan.
+          <h2 className="text-2xl font-bold mb-4">Karta laddas...</h2>
+          <p className="text-gray-400 mb-6">
+            Lägg till din Mapbox-token i .env.local
           </p>
-          <div className="bg-dark-card p-4 rounded-lg text-left">
-            <p className="text-sm text-gray-500 mb-2">Sportbarer i Stockholm:</p>
-            {bars.map((bar, index) => (
+          <div className="space-y-2">
+            {bars.map((bar) => (
               <button
                 key={bar.id}
                 onClick={() => onSelectBar(bar)}
-                className={`w-full text-left p-3 mb-2 rounded hover:bg-dark-bg transition-colors ${
-                  selectedBar?.id === bar.id ? 'bg-accent-green/20 border border-accent-green' : 'bg-dark-bg'
+                className={`w-full text-left p-4 rounded-xl transition-all ${
+                  selectedBar?.id === bar.id 
+                    ? 'bg-white/20 border border-white/30' 
+                    : 'bg-white/5 hover:bg-white/10 border border-transparent'
                 }`}
               >
                 <div className="font-bold">{bar.name}</div>
-                <div className="text-xs text-gray-400">{bar.address}</div>
+                <div className="text-xs text-gray-400 mt-1">{bar.address}</div>
                 {bar.currentMatch && (
-                  <div className="text-xs text-accent-green mt-1">⚽ {bar.currentMatch}</div>
+                  <div className="text-xs text-green-400 mt-2">⚽ {bar.currentMatch}</div>
                 )}
               </button>
             ))}
