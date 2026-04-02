@@ -20,7 +20,7 @@ export default function SettingsPage() {
       const { error } = await supabase
         .from('profiles')
         .update({ full_name: fullName })
-        .eq('id', user?.id);
+        .eq('id', user?.id || '');
 
       if (error) throw error;
 

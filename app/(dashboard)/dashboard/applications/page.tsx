@@ -23,7 +23,7 @@ export default function ApplicationsPage() {
     const { data } = await supabase
       .from('job_applications')
       .select('*, cv_versions(*)')
-      .eq('user_id', user?.id)
+      .eq('user_id', user?.id || '')
       .order('created_at', { ascending: false });
 
     if (data) {

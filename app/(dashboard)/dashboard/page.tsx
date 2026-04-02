@@ -30,14 +30,14 @@ export default function DashboardPage() {
     const { data: cvs } = await supabase
       .from('cv_versions')
       .select('*')
-      .eq('user_id', user?.id)
+      .eq('user_id', user?.id || '')
       .order('created_at', { ascending: false })
       .limit(5);
 
     const { data: apps } = await supabase
       .from('job_applications')
       .select('*')
-      .eq('user_id', user?.id)
+      .eq('user_id', user?.id || '')
       .order('created_at', { ascending: false })
       .limit(5);
 

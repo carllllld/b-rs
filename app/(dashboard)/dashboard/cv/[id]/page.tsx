@@ -37,7 +37,7 @@ export default function CVResultPage() {
     const { data, error } = await supabase
       .from('cv_versions')
       .select('*')
-      .eq('id', params.id)
+      .eq('id', params.id as string)
       .single();
 
     if (error) {
@@ -55,7 +55,7 @@ export default function CVResultPage() {
     const { data } = await supabase
       .from('agent_logs')
       .select('*')
-      .eq('cv_version_id', params.id)
+      .eq('cv_version_id', params.id as string)
       .order('created_at', { ascending: true });
 
     if (data) {
@@ -73,7 +73,7 @@ export default function CVResultPage() {
           event: 'INSERT',
           schema: 'public',
           table: 'agent_logs',
-          filter: `cv_version_id=eq.${params.id}`,
+          filter: `cv_version_id=eq.${params.id as string}`,
         },
         (payload: any) => {
           setLogs((prev) => [...prev, payload.new]);
