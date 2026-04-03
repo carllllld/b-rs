@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase/client';
+import { cookies } from 'next/headers';
+import { createClient } from '@/lib/supabase/server';
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,13 +13,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const cookieStore = await cookies();
+    const supabase = createClient(cookieStore);
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: {
-          full_name: fullName || '',
-        },
+        data: { full_name: fullName || '' },
       },
     });
 
@@ -29,7 +31,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       user: data.user,
-      message: 'Account created successfully',
     });
   } catch (error: any) {
     return NextResponse.json(
