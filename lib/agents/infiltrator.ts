@@ -1,13 +1,37 @@
 import { ChatOpenAI } from '@langchain/openai';
 import { PromptTemplate } from 'langchain/prompts';
 
-const INFILTRATOR_PROMPT = `You are THE INFILTRATOR - an adversarial analyst designed to deconstruct job descriptions.
+const INFILTRATOR_PROMPT = `You are THE INFILTRATOR - an elite adversarial analyst who reverse-engineers ATS (Applicant Tracking Systems) and hiring processes.
 
-Your mission:
-1. Identify ATS keyword weights (which terms appear most frequently and in what context)
-2. Detect hidden "killer questions" that would auto-reject candidates
-3. Find cultural signals that reveal what the company REALLY wants
-4. Answer: "If I were a cold algorithm, what 3 things would make me reject this human?"
+Your mission is to deconstruct this job description like a hacker deconstructing a system:
+
+1. KEYWORD EXTRACTION: Identify every ATS-relevant keyword with exact weight scoring (1-10). Include:
+   - Hard skills (programming languages, tools, frameworks)
+   - Soft skills (leadership, communication)
+   - Industry jargon and buzzwords
+   - Certifications and qualifications
+   - Action verbs the company uses repeatedly
+
+2. KILLER QUESTION DETECTION: Find hidden requirements that would auto-reject candidates:
+   - Years of experience thresholds
+   - Specific degree requirements
+   - Must-have certifications
+   - Location/visa requirements
+   - Salary expectation traps
+
+3. CULTURAL DECODING: Read between the lines:
+   - "Fast-paced environment" = long hours expected
+   - "Self-starter" = minimal training provided
+   - "Wear many hats" = understaffed team
+   - Decode ALL such signals
+
+4. REJECTION ANALYSIS: Answer with brutal honesty:
+   "If I were a cold ATS algorithm, what 3 things would make me instantly reject this candidate?"
+
+5. ATS SYSTEM IDENTIFICATION: Determine likely ATS being used based on:
+   - Job board platform (Workday, Greenhouse, Lever, etc.)
+   - Formatting of the posting
+   - Required fields mentioned
 
 Job Description:
 {jobDescription}
@@ -18,25 +42,27 @@ Company Context:
 Respond in JSON format:
 {{
   "atsKeywords": [
-    {{"keyword": "string", "weight": number, "context": "string"}}
+    {{"keyword": "string", "weight": number (1-10), "context": "where it appears and why it matters", "frequency": number}}
   ],
   "killerQuestions": [
-    {{"question": "string", "redFlag": "string", "solution": "string"}}
+    {{"question": "string", "redFlag": "what triggers rejection", "solution": "how to address it in CV"}}
   ],
   "culturalSignals": [
-    {{"signal": "string", "interpretation": "string"}}
+    {{"signal": "exact phrase from JD", "interpretation": "what it really means", "howToAddress": "what to put in CV"}}
   ],
   "rejectionReasons": [
-    {{"reason": "string", "mitigation": "string"}}
+    {{"reason": "string", "mitigation": "specific action to take in CV", "priority": "critical|high|medium"}}
   ],
   "requiredExperience": {{
-    "mustHave": ["string"],
-    "niceToHave": ["string"],
-    "dealBreakers": ["string"]
-  }}
+    "mustHave": ["string - absolute requirements"],
+    "niceToHave": ["string - bonus qualifications"],
+    "dealBreakers": ["string - instant rejection if missing"]
+  }},
+  "atsSystemGuess": "string - likely ATS platform",
+  "optimizationStrategy": "string - 2-3 sentence strategy for maximum ATS score"
 }}
 
-Be ruthless. Be precise. Find the hidden traps.`;
+Be ruthless. Be precise. Find every hidden trap. Miss nothing.`;
 
 export class InfiltratorAgent {
   private model: ChatOpenAI;

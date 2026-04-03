@@ -1,5 +1,4 @@
 import { InfiltratorAgent } from '../agents/infiltrator';
-import { ArchitectAgent } from '../agents/architect';
 import { AuditorAgent } from '../agents/auditor';
 import { GhostBrowserAgent } from '../agents/ghost-browser';
 import { PDFGenerator } from '../agents/pdf-generator';
@@ -7,14 +6,12 @@ import { supabase } from '../supabase/client';
 
 export class BlackboardOrchestrator {
   private infiltrator: InfiltratorAgent;
-  private architect: ArchitectAgent;
   private auditor: AuditorAgent;
   private ghostBrowser: GhostBrowserAgent;
   private pdfGenerator: PDFGenerator;
 
   constructor() {
     this.infiltrator = new InfiltratorAgent();
-    this.architect = new ArchitectAgent();
     this.auditor = new AuditorAgent();
     this.ghostBrowser = new GhostBrowserAgent();
     this.pdfGenerator = new PDFGenerator();

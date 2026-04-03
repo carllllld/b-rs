@@ -89,7 +89,8 @@ export class AuditorAgent {
 
     let iteration = 0;
     let optimizedCV = null;
-    let auditResult = null;
+    let auditResult: any = null;
+    let currentInput = cvContent;
 
     while (iteration < this.maxIterations) {
       iteration++;
@@ -101,8 +102,22 @@ export class AuditorAgent {
         { iteration }
       );
 
-      // Architect optimizes
-      optimizedCV = await architect.optimize(cvContent, targetAnalysis, atsKeywords);
+      // Build enhanced context from previous audit feedback
+      let enhancedAnalysis = targetAnalysis;
+      if (auditResult && auditResult.status === 'REJECTED') {
+        enhancedAnalysis = {
+          ...targetAnalysis,
+          previousAuditFeedback: {
+            missingKeywords: auditResult.keywordMatch?.missing || [],
+            weakDensity: auditResult.keywordMatch?.weakDensity || [],
+            improvements: auditResult.improvements || [],
+            rejectionReasons: auditResult.rejectionReasons || [],
+          },
+        };
+      }
+
+      // Architect optimizes (uses previous feedback to improve)
+      optimizedCV = await architect.optimize(currentInput, enhancedAnalysis, atsKeywords);
 
       await architect.logAction(
         cvVersionId,
@@ -130,6 +145,9 @@ export class AuditorAgent {
         );
         break;
       }
+
+      // Feed the optimized CV back as input for next iteration
+      currentInput = JSON.stringify(optimizedCV);
 
       if (iteration === this.maxIterations) {
         await this.logAction(
