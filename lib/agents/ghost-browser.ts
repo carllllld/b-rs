@@ -1,13 +1,10 @@
-import { ChatOpenAI } from '@langchain/openai';
+// Ghost Browser Agent - Auto-apply functionality
+// Playwright is loaded dynamically at runtime only when auto-apply is triggered
+// It is NOT included in the build bundle
 
 export class GhostBrowserAgent {
   private browser: any = null;
-  private model: any;
-
-  constructor() {
-    // Lazy load OpenAI to avoid build issues
-    this.initModel();
-  }
+  private model: any = null;
 
   async initModel() {
     const { ChatOpenAI } = await import('@langchain/openai');
@@ -19,15 +16,15 @@ export class GhostBrowserAgent {
   }
 
   async initialize() {
-    const { chromium } = await import('playwright');
-    this.browser = await chromium.launch({
-      headless: false, // Set to true in production
+    // Dynamic import - only loads when actually needed at runtime
+    const pw = await import('playwright' as any);
+    this.browser = await pw.chromium.launch({
+      headless: true,
       slowMo: 100,
     });
   }
 
   async detectFormFields(page: any) {
-    // Extract all form fields
     const fields = await page.evaluate(() => {
       const inputs = Array.from(document.querySelectorAll('input, textarea, select'));
       return inputs.map((input: any) => ({
@@ -45,6 +42,8 @@ export class GhostBrowserAgent {
   }
 
   async mapCVToFields(cvData: any, fields: any[]) {
+    if (!this.model) await this.initModel();
+
     const prompt = `You are a form-filling AI. Map CV data to form fields intelligently.
 
 CV Data:
@@ -95,7 +94,7 @@ Respond in JSON:
         
         if (await element.isVisible()) {
           await element.fill(mapping.value);
-          await page.waitForTimeout(200); // Human-like delay
+          await page.waitForTimeout(200);
         }
       } catch (error) {
         console.error(`Failed to fill field ${mapping.selector}:`, error);
@@ -109,7 +108,6 @@ Respond in JSON:
         const element = await page.locator(question.selector).first();
         
         if (await element.isVisible()) {
-          // Generate context-aware answer
           const answer = await this.generateContextualAnswer(
             question.question,
             cvData
@@ -125,6 +123,8 @@ Respond in JSON:
   }
 
   async generateContextualAnswer(question: string, cvData: any) {
+    if (!this.model) await this.initModel();
+
     const prompt = `Generate a compelling answer to this application question based on the candidate's CV.
 
 Question: ${question}
@@ -150,7 +150,7 @@ Answer:`;
       await this.initialize();
     }
 
-    const page = await this.browser!.newPage();
+    const page = await this.browser.newPage();
 
     try {
       await this.logAction(applicationId, 'NAVIGATION_START', `Navigating to ${jobUrl}`);
@@ -176,12 +176,13 @@ Answer:`;
 
       await this.logAction(applicationId, 'FORM_COMPLETE', 'Form filled successfully');
 
-      // Don't auto-submit - let user review
       await page.waitForTimeout(2000);
 
       return {
         success: true,
-        screenshot: await page.screenshot({ fullPage: true }),
+        fieldsFound: fields.length,
+        fieldsFilled: mappings.length,
+        trickyQuestionsAnswered: trickyQuestions.length,
       };
     } catch (error) {
       await this.logAction(applicationId, 'ERROR', `Failed: ${error}`);
