@@ -58,7 +58,7 @@ export default function PricingPage() {
   const { user, profile } = useUser();
   const [loading, setLoading] = useState<string | null>(null);
 
-  const handleSubscribe = async (priceId: string | null, planName: string) => {
+  const handleSubscribe = async (priceId: string | null | undefined, planName: string) => {
     if (!user) {
       router.push('/signup');
       return;
